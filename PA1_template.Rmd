@@ -8,18 +8,131 @@ output:
 
 ## Loading and preprocessing the data
 
+```{r setup, include=FALSE}
+library(dplyr)
+knitr::opts_chunk$set(echo = TRUE)
+```
 
+1. Load the data (i.e. `read.csv()`)
 
+```{r loading}
+
+file <- read.csv("activity.csv", header=TRUE, colClasses = c("numeric", "Date",     "numeric"))
+
+```
+2. Process/transform the data (if necessary) into a format suitable for your analysis
+
+```{r process}
+
+data <- file[!is.na(file$steps), ]
+
+```
 ## What is mean total number of steps taken per day?
 
+1. Make a histogram of the total number of steps taken each day and 
 
+```{r mean}
+
+sum.total.days <- tapply(data$steps, data$date, sum)
+
+hist(sum.total.days, main="Histogram mean total number of steps taken per day", xlab= "Mean total number of steps taken per day")
+
+```
+
+2. Calculate and report the **mean** and **median** total number of steps taken per day
+
+```{r mean.report}
+
+mean(sum.total.days)
+median(sum.total.days)
+
+```
 
 ## What is the average daily activity pattern?
 
+1. Make a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
+```{r daily.activity}
 
+mean.intervals <- tapply(data$steps, data$interval, mean)
+
+plot(unique(data$interval), mean.intervals, type = "l", main = "Average Daily Activity", xlab = "Intervals", ylab = "Average across all days")
+
+```
+
+2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```{r daily.activity.max}
+
+names(mean.intervals[mean.intervals == max(mean.intervals)])
+
+```
 ## Imputing missing values
 
+1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with `NA`s)
 
+``` {r calculate.misssing.values}
+
+length(is.na(file$steps))
+
+```
+
+2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+
+``` {r filling.values}
+
+mean.intervals.df <- aggregate(list(data$steps), list(data$interval), mean)
+
+colnames(mean.intervals.df) <- c("interval", "mean.total")
+
+data.na <- file[is.na(file$steps), ]
+
+for (i in unique(file[is.na(file$steps), ]$interval)){
+  data.na[data.na$interval == i, 1] <- mean.intervals.df[mean.intervals.df$interval == i, 2]
+  }
+
+```
+
+3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+``` {r df.final}
+
+data.final <- rbind(data, data.na)
+data.final <- data.final[order(data.final$date, data.final$interval), ]
+
+summary(data.final)
+head(data.final, 20)
+
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+1. Create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
+
+``` {r weekdays}
+
+data.final <- mutate(data.final, weekday = weekdays(date))
+data.final[data.final$weekday == "Saturday" | data.final$weekday == "Sunday", "weekday.factor"] <- c("WE")
+data.final[!(data.final$weekday == "Saturday" | data.final$weekday == "Sunday"), "weekday.factor"] <- c("WD")
+
+str(data.final)
+head(data.final, 20)
+
+```
+
+2. Make a panel plot containing a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). The plot should look something like the following, which was created using **simulated data**:
+
+``` {r plot}
+
+weekdays <- subset(data.final, data.final$weekday.factor == "WD")
+weekends <- subset(data.final, data.final$weekday.factor == "WE")
+
+weekdays.mean <- tapply(weekdays$steps, weekdays$interval, mean)
+weekends.mean <- tapply(weekends$steps, weekends$interval, mean)
+
+par(mfrow=c(2, 1), bty = "l")
+plot(unique(weekdays$interval), weekdays.mean, type = "l", main = "Average Daily Activity on Regular Weekdays", xlab = "Intervals", ylab = "Average across all days")
+plot(unique(weekends$interval), weekends.mean, type = "l", main = "Average Daily Activity on Weekends", xlab = "Intervals", ylab = "Average across all days")
+
+
+```
