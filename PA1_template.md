@@ -5,7 +5,6 @@ output:
     keep_md: true
 ---
 
-
 ## Loading and preprocessing the data
 
 
@@ -30,10 +29,10 @@ data <- file[!is.na(file$steps), ]
 ```r
 sum.total.days <- tapply(data$steps, data$date, sum)
 
-hist(sum.total.days, main="Histogram mean total number of steps taken per day", xlab= "Mean total number of steps taken per day")
+hist(sum.total.days, main="Histogram total number of steps taken per day", xlab= "Total number of steps taken per day")
 ```
 
-![](PA1_template_files/figure-html/mean-1.png)<!-- -->
+![](PA1_template_files/figure-html/sum-1.png)<!-- -->
 
 2. Calculate and report the **mean** and **median** total number of steps taken per day
 
@@ -151,6 +150,53 @@ head(data.final, 20)
 ## 18 1.1132075 2012-10-01      125
 ## 19 1.8301887 2012-10-01      130
 ## 20 0.1698113 2012-10-01      135
+```
+4. Make a histogram of the total number of steps taken each day and Calculate and report the **mean** and **median** total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+
+```r
+total.days <- tapply(data.final$steps, data.final$date, sum)
+
+hist(total.days, main="Histogram mean total number of steps taken per day", xlab= "Total number of steps taken per day")
+```
+
+![](PA1_template_files/figure-html/hist.missing.values-1.png)<!-- -->
+
+
+```r
+mean(total.days)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
+median(total.days)
+```
+
+```
+## [1] 10766.19
+```
+
+If you compare the mean and the median of both dataframes, with and without missing values, you can see that the mean is the same for both dataframes, while the median differs. Next, you can find the percentage error for the mean and median calculated for the dataframe with missing vallued
+
+
+
+```r
+(mean(total.days) - mean(sum.total.days))/mean(total.days)*100
+```
+
+```
+## [1] 0
+```
+
+```r
+(median(total.days) - median(sum.total.days))/median(total.days)*100
+```
+
+```
+## [1] 0.01104085
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
